@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+</head>
+
+<body>
+    <div id="player"></div>
+    <script>
+        "use strict";
+        var qwebchannel;
+        new QWebChannel(qt.webChannelTransport, function (channel) {
+            qwebchannel = channel.objects.qwebchannel;
+        });
+        function playVideo() {
+            player.playVideo();
+        }
+        function pauseVideo() {
+            player.pauseVideo();
+        }
+        function loadVideo(videoId) {
+            player.loadVideoById(videoId, 0, 'small');
+        }
+        function seekTo(position) {
+            player.seekTo(position, true);
+        }
+        function setVolume(volume) {
+            player.setVolume(volume);
+        }
+        function cueVideo(videoId, startPosition) {
+            player.cueVideoById(videoId, startPosition);
+        }
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                },
+                autoplay: false
+            });
+        }
+        function onPlayerReady(event) {
+            setInterval(function () {
+                let position = player.getCurrentTime();
+                qwebchannel.playerProgressChanged(position);
+            }, 1000);
+        }
+        function onPlayerStateChange(event) {
+            qwebchannel.playerStateChanged(event.data);
+        }
+    </script>
+</body>
+
+</html>

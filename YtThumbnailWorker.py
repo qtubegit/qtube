@@ -22,7 +22,7 @@ class YtThumbnailWorker(QtCore.QRunnable):
             self.signals.trackUpdated.emit(self.track)
         except Exception as e:
             # Can happen when the HTTP request returns a 404, for example.
-            print(f'Could not retrieve icon:\n{e}')
+            print(f'Could not retrieve icon "{self.iconUrl}":\n{e}')
 
     def saveThumbnail(self, url) -> QtGui.QIcon():
         if url == None:

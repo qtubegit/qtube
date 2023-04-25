@@ -43,10 +43,14 @@ class YtTrackInfoWorker(QtCore.QRunnable):
                 self.track.title = jvid['title']
 
             if self.refreshThumbnail:
-                # Assume the last icon in the list is the high quality one. This seems to be
-                # reliable currently, but a better method would go through the resolution 
-                # information that is present in the JSON for each thumbnail and sort them.
-                iconUrl = jvid['thumbnails'][-1]['url']
+                # Find the largest thumbnail. Thumbnails without resolution information
+                # refer to non-existent thumbnails sometimes and then yield a HTTP 404.
+                selector = lambda t: \
+                    t['width'] * t['height'] \
+                    if 'width' in t and 'height' in t \
+                    else 0
+                sv = sorted(jvid['thumbnails'], key = selector)
+                iconUrl = sv[-1]['url']
             else:
                 # Retrieve low quality icons unless we are doing an explicit refresh.
                 # This will cause first plays of a track to be faster.

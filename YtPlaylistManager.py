@@ -1,7 +1,7 @@
 import json
 import numpy
 import pathlib
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 import enum
 
 from YtPlaylist import YtPlaylist
@@ -36,6 +36,7 @@ class YtPlaylistManager(QtCore.QObject):
         self.playlists = []
         self.playMode = YtPlayMode.Normal
         self.isDirty = False
+        self.currentTrackPath = pathlib.Path(pathlib.Path.home(),  '.qtube/currentTrack.json')
         self.playlistPath = pathlib.Path(pathlib.Path.home(),  '.qtube/playlists.json')
         self.thumbnailPath = pathlib.Path(pathlib.Path.home(), '.qtube/thumbnails')
         self.thumbnailPath.mkdir(parents=True, exist_ok=True)
@@ -98,12 +99,45 @@ class YtPlaylistManager(QtCore.QObject):
                 playlist.tracks.append(ytTrack)
             self.playlists.append(playlist)
 
+    def getCurrentTrack(self) -> YtTrack:
+        '''Returns the last track that was playing when the player was last running.'''
+        try:
+            with open(self.currentTrackPath, 'r+') as fp:
+                currentTrack = json.load(fp)
+        except json.decoder.JSONDecodeError:
+            return None
+        except FileNotFoundError:
+            return None
+
+        currentPlaylist = self.getPlaylist(currentTrack['playlist'])
+        if currentPlaylist == None:
+            return None
+        currentTrack = currentPlaylist[currentTrack['trackIndex']]
+        return currentTrack
+
     def savePlaylists(self):
         playlists = { pl.name: [t.getTags() for t in pl] for pl in self.playlists }
         serialized = json.dumps(playlists)
         with open(self.playlistPath, 'w+') as fp:
             fp.write(serialized)
         self.isDirty = False
+
+    # This must be called every time a track's index in a playlist changes,
+    # because the current track is identified by playlist name and index.
+    def saveCurrentTrack(self):
+        '''Saves the currently playing track.'''
+        fd = open(self.currentTrackPath, 'w+')
+        if self.activeTrack == None:
+            fd.truncate()
+            return
+        playlist = self.activeTrack.playlist
+        index = playlist.tracks.index(self.activeTrack)
+        playingTrack = {
+            'playlist': playlist.name,
+            'trackIndex': index
+        }
+        serialized = json.dumps(playingTrack)
+        fd.write(serialized)
 
     def getPlaylists(self) -> list:
         return self.playlists
@@ -139,10 +173,13 @@ class YtPlaylistManager(QtCore.QObject):
             track.playlist = playlist
         self.tracksAdded.emit(playlist, tracks)
         self.isDirty = True
+        if self.activeTrack != None and playlist == self.activeTrack.playlist:
+            self.saveCurrentTrack()
 
     def removeTracks(self, playlist: YtPlaylist, tracks: list):
         if playlist == None:
             return
+        saveTrack = self.activeTrack != None and playlist == self.activeTrack.playlist
         for track in tracks:
             if self.activeTrack == track:
                 self.activeTrack = None
@@ -150,16 +187,14 @@ class YtPlaylistManager(QtCore.QObject):
             del(playlist[track])
         self.tracksRemoved.emit(playlist, tracks)
         self.isDirty = True
+        if saveTrack:
+            self.saveCurrentTrack()
 
     def activateTrack(self, track: YtTrack):
         self.activeTrack = track
         self.trackActivated.emit(track)
         self.addTracks('# History', [track.makeCopy()])
-
-    def arrangeTracks(self, playlist: YtPlaylist, tracks: list):
-        if playlist == None:
-            return
-        playlist.tracks = tracks
+        self.saveCurrentTrack()
 
     def activateNextTrack(self, loopOther: bool = False):
         self.jumpPlaylistBy(1, loopOther)

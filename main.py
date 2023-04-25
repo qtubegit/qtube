@@ -1,6 +1,6 @@
 #!python3
 import os
-from PyQt5 import QtWidgets
+from PyQt6 import QtWidgets, QtGui, QtCore
 import sys
 
 from YtMainWindow import YtMainWindow
@@ -11,6 +11,9 @@ if __name__ == "__main__":
     # set them here so we can find youtube-dl / yt-dlp.
     os.environ['PATH'] = f'{os.environ["PATH"]}:/usr/local/bin'
     app = QtWidgets.QApplication(sys.argv)
+    icon = QtGui.QIcon('icon.ico')
+    app.setWindowIcon(icon)
+
     win = YtMainWindow()
     win.show()
     sys.exit(app.exec())

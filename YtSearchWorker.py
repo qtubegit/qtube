@@ -1,5 +1,5 @@
 import abc
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 class YtSearchSignals(QtCore.QObject):
     tracksFound = QtCore.pyqtSignal(list)

@@ -1,7 +1,7 @@
 import ctypes
 import json
 import typing
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 from YtPlaylistManager import YtPlaylistManager
 from YtPlaylist import YtPlaylist
 from YtPlaylistModel import YtPlaylistModel
@@ -67,14 +67,16 @@ class YtPlaylistView(QtWidgets.QListView):
         self.itemModel.refreshModel()
 
     def dragMoveEvent(self, event: QtGui.QDragMoveEvent):
-        index = self.indexAt(event.pos())
+        pos = event.position().toPoint()
+        index = self.indexAt(pos)
         model = self.selectionModel()
         flags = QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect
         model.select(index, flags)
         self.setFocus()
 
     def dropEvent(self, event: QtGui.QDropEvent):
-        index = self.indexAt(event.pos())
+        pos = event.position().toPoint()
+        index = self.indexAt(pos)
         playlist = self.itemModel.getPlaylist(index)
         data = event.mimeData().text()
         tracksDragged = json.loads(data)

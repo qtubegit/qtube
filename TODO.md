@@ -14,7 +14,7 @@
 
 BUGS
 - Editing operation cancels when changing track of search playlist while new results are coming in
-- Stop restting the model when tracks are added into search results playlist. Use the row specific ones.
+- Stop resetting the model when tracks are added into search results playlist. Use the row specific ones.
 
 FEATURES
 - When dragging track to desktop, make an m3u playlist

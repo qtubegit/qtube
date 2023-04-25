@@ -3,7 +3,7 @@ import typing
 
 from YtPlaylistManager import YtPlaylistManager
 from YtPlaylist import YtPlaylist
-from PyQt5 import QtCore, QtGui
+from PyQt6 import QtCore, QtGui
 
 class YtColumn():
     def __init__(
@@ -11,7 +11,7 @@ class YtColumn():
     name: str, 
     attribute: str, 
     default: typing.Any,
-    flags: QtCore.Qt.ItemFlags = QtCore.Qt.ItemFlag.NoItemFlags,
+    flags: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.NoItemFlags,
     sort: typing.Callable = None, 
     display: typing.Callable = None):
         self.name = name
@@ -64,9 +64,9 @@ class YtTrackModel(QtCore.QAbstractTableModel):
         return len(self.modelData)
 
     def headerData(self, column, orientation, role):
-        if role != QtCore.Qt.DisplayRole:
+        if role != QtCore.Qt.ItemDataRole.DisplayRole:
             return QtCore.QVariant()
-        if orientation == QtCore.Qt.Horizontal:
+        if orientation == QtCore.Qt.Orientation.Horizontal:
             return self.columnMap[column].name
 
     def getTrack(self, index):
@@ -76,19 +76,19 @@ class YtTrackModel(QtCore.QAbstractTableModel):
         if not index.isValid():
             return QtCore.QVariant()
 
-        if role == QtCore.Qt.UserRole:
+        if role == QtCore.Qt.ItemDataRole.UserRole:
             return self.modelData[index.row()]
 
-        if role == QtCore.Qt.FontRole:
+        if role == QtCore.Qt.ItemDataRole.FontRole:
             activeTrack = self.playlistManager.getActiveTrack()
             if self.modelData[index.row()] == activeTrack:
                 return self.activeFont
             return self.inactiveFont
 
-        if role == QtCore.Qt.DecorationRole and index.column() == 0:
+        if role == QtCore.Qt.ItemDataRole.DecorationRole and index.column() == 0:
            return self.modelData[index.row()].icon
 
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+        if role == QtCore.Qt.ItemDataRole.DisplayRole or role == QtCore.Qt.ItemDataRole.EditRole:
             track = self.modelData[index.row()]
             mapping = self.columnMap[index.column()]
             value = track.__getattr__(mapping.attribute)
@@ -104,7 +104,7 @@ class YtTrackModel(QtCore.QAbstractTableModel):
         self.playlistManager.updateTrack(track)
         return True
 
-    def flags(self, index) -> QtCore.Qt.ItemFlags:
+    def flags(self, index) -> QtCore.Qt.ItemFlag:
         flags = super().flags(index)
         mapping = self.columnMap[index.column()]
         return flags | mapping.flags
@@ -116,21 +116,19 @@ class YtTrackModel(QtCore.QAbstractTableModel):
         self.filter(self.filterTerm)
         self.endResetModel()
 
-    def sort(self, column, direction):
+    def sort(self, column: int, direction: QtCore.Qt.SortOrder):
         if self.activePlaylist == None:
             return
         mapping = self.columnMap[column]
-        attribute = mapping.attribute            
+        attribute = mapping.attribute
         key = lambda track: mapping.getSortKey(track.__getattr__(attribute))
         self.activePlaylist.tracks = sorted(
             self.activePlaylist.tracks,
-            reverse = (direction == 0),
-            key = key) 
-        self.playlistManager.arrangeTracks(
-            self.activePlaylist, 
-            self.activePlaylist.tracks)
+            reverse = (direction == QtCore.Qt.SortOrder.DescendingOrder),
+            key = key)
         self.filter(self.filterTerm)
         self.modelChanged.emit()
+        self.playlistManager.saveCurrentTrack()
 
     def setActivePlaylist(self, playlist: YtPlaylist):
         self.beginResetModel()

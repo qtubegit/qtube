@@ -1,5 +1,7 @@
+# FIXME: Pressing capslock can crash pynput under Mac OS. 
+# For now, use a custom version with a workaround.
 import pynput.keyboard
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 class YtInputWorker(QtCore.QObject):
     mediaPlayPause = QtCore.pyqtSignal()
@@ -24,7 +26,7 @@ class YtInputWorker(QtCore.QObject):
 
     # FIXME: There were some issue with the YouTube Player grabbing 
     # the media keys. It might be better to just have our own set of
-    # global shortcuts.
+    # global shortcuts, as below.
     def captureKeys(self):
         with pynput.keyboard.GlobalHotKeys({
             '<ctrl>+<shift>+o': self.showTrack,

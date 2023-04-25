@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui
+from PyQt6 import QtCore, QtGui
 from YtPlaylist import YtPlaylist
 from YtPlaylistManager import YtPlaylistManager
 
@@ -15,11 +15,11 @@ class YtPlaylistModel(QtCore.QAbstractListModel):
         self.inactiveFont.setPointSize(13)
         self.refreshModel()
 
-    def supportedDropActions(self) -> QtCore.Qt.DropActions:
-        return QtCore.Qt.CopyAction
+    def supportedDropActions(self) -> QtCore.Qt.DropAction:
+        return QtCore.Qt.DropAction.CopyAction
 
     def canDropMimeData(self, data, action, row, column, parent) -> bool:
-        return action == QtCore.Qt.CopyAction
+        return action == QtCore.Qt.DropAction.CopyAction
 
     def refreshModel(self):
         self.beginResetModel()

@@ -1,7 +1,7 @@
 import datetime
 import pathlib
 import time
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 import typing
 
 from YtAspectRatioLabel import YtAspectRatioLabel
@@ -47,6 +47,7 @@ class YtMainWindow(QtWidgets.QWidget):
 
         self.searchResultsName = '# Search Results'
         self.playlistManager = YtPlaylistManager()
+
         self.searchThreads = []
         self.searchWorker = None
         self.trackThreads = []
@@ -57,6 +58,11 @@ class YtMainWindow(QtWidgets.QWidget):
         threadPool = QtCore.QThreadPool.globalInstance()
         threadPool.start(self.playlistWorker)
         self.setupUi()
+
+        # Restore the last track that was playing when player quit.
+        currentTrack = self.playlistManager.getCurrentTrack()
+        if currentTrack != None:
+            self.playlistManager.activateTrack(currentTrack)
 
     def setupUi(self):
         self.pauseIcon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaPause)
@@ -79,8 +85,8 @@ class YtMainWindow(QtWidgets.QWidget):
         self.nextButton.setIcon(self.nextIcon)
         self.previousButton = QtWidgets.QPushButton()
         self.previousButton.setIcon(self.previousIcon)
-        self.progressBar = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.volumeSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.progressBar = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.volumeSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.volumeSlider.setMaximum(100)
         self.volumeSlider.setFixedWidth(100)
         self.playmodeButton = QtWidgets.QPushButton(YtPlayMode.Normal.value)
@@ -144,15 +150,11 @@ class YtMainWindow(QtWidgets.QWidget):
         self.hlayout.addWidget(self.nextButton)
         self.hlayout.addWidget(self.volumeSlider)
         self.hlayout.addWidget(self.playmodeButton)
-        self.hlayout.setContentsMargins(5, 0, 0, 15)
         self.grid.addLayout(self.hlayout, 1, 0, 1, 1)
 
         ## Main Window 
         self.setWindowTitle('QTube')
-        self.appIcon = QtGui.QIcon('icon.ico')
-        self.setWindowIcon(self.appIcon)
-        self.player.setVolume(50)
-        initialSize = QtWidgets.QDesktopWidget().availableGeometry(self).size() * .65
+        initialSize = QtGui.QGuiApplication.primaryScreen().availableGeometry().size() * .65
         self.resize(initialSize)
         leftRatio = .25
         self.splitter.setSizes([
@@ -160,6 +162,7 @@ class YtMainWindow(QtWidgets.QWidget):
             int(initialSize.width() * (1 - leftRatio))])
 
         # Notifications
+        self.appIcon = QtGui.QIcon('icon.ico')
         self.tray = QtWidgets.QSystemTrayIcon(self)
         self.tray.setIcon(self.appIcon)
         self.tray.setVisible(True)
@@ -179,43 +182,43 @@ class YtMainWindow(QtWidgets.QWidget):
         # I like this arrangement better than having to reach over to zero, which is
         # to the far right on the number row on most keyboards, to get to the track
         # beginning. As a future feature, make these configurable, perhaps.
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+1"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+1"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(0))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+2"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+2"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(10))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+3"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+3"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(20))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+4"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+4"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(30))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+5"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+5"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(40))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+6"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+6"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(50))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+7"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+7"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(60))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+8"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+8"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(70))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+9"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+9"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(80))
-        self.shortcutSeek50 = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+0"), self)
+        self.shortcutSeek50 = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+0"), self)
         self.shortcutSeek50.activated.connect(lambda: self.seekTrackPercent(90))
-        self.shortcutSeekForward = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+Left"), self)
+        self.shortcutSeekForward = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Left"), self)
         self.shortcutSeekForward.activated.connect(lambda: self.seekTrack(-10))
-        self.shortcutSeekBackward = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+Right"), self)
+        self.shortcutSeekBackward = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Right"), self)
         self.shortcutSeekBackward.activated.connect(lambda: self.seekTrack(10))
-        self.shortcutFocusPlaylists = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
+        self.shortcutFocusPlaylists = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
         self.shortcutFocusPlaylists.activated.connect(self.playlistView.focus)
-        self.shortcutFocusTracks = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+e"), self)
+        self.shortcutFocusTracks = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+e"), self)
         self.shortcutFocusTracks.activated.connect(self.trackView.focus)
-        self.shortcutFocusSearch = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+f"), self)
+        self.shortcutFocusSearch = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+f"), self)
         self.shortcutFocusSearch.activated.connect(self.searchEdit.setFocus)
-        self.shortcutFocusPlaylistsName = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+s"), self)
+        self.shortcutFocusPlaylistsName = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+s"), self)
         self.shortcutFocusPlaylistsName.activated.connect(self.plNameEdit.setFocus)
-        self.shortcutFocusPosition = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+t"), self)
+        self.shortcutFocusPosition = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+t"), self)
         self.shortcutFocusPosition.activated.connect(self.positionEdit.setFocus)
-        self.shortcutFocusPosition = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+r"), self)
+        self.shortcutFocusPosition = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+r"), self)
         self.shortcutFocusPosition.activated.connect(self.trackView.arrangeTracks)
-        self.shortcutFullscreen = QtWidgets.QShortcut(QtGui.QKeySequence.StandardKey.FullScreen, self)
+        self.shortcutFullscreen = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.FullScreen, self)
         self.shortcutFullscreen.activated.connect(self.toggleFullscreen)
 
     def toggleFullscreen(self):
@@ -245,7 +248,8 @@ class YtMainWindow(QtWidgets.QWidget):
         self.playlistManager.setPlayMode(mode)
 
     def volumeChanged(self, volume):
-        self.volumeSlider.setValue(volume)
+        if not self.volumeSlider.isSliderDown():
+            self.volumeSlider.setValue(volume)
 
     def changeVolume(self, position):
         self.player.volumeChanged.disconnect(self.volumeChanged)
@@ -288,10 +292,11 @@ class YtMainWindow(QtWidgets.QWidget):
             minutes=date.minute, 
             seconds=date.second)
         self.seekTrackPosition(delta.seconds)
-    
+
     def positionChanged(self, position):
         self.progressBar.valueChanged.disconnect(self.seekTrackPosition)
-        self.progressBar.setValue(position)
+        if not self.progressBar.isSliderDown():
+            self.progressBar.setValue(position)
         self.progressBar.valueChanged.connect(self.seekTrackPosition)
 
         # Position changes for the previously playing video can keep being

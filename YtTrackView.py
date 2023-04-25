@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 import json
 import typing
 
@@ -43,15 +43,15 @@ class YtTrackView(QtWidgets.QTableView):
         self.installEventFilter(self)
         self.setSelectionBehavior(self.SelectionBehavior.SelectRows)
 
-        self.shortcutDeleteTrack = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+d'), self)
+        self.shortcutDeleteTrack = QtGui.QShortcut(QtGui.QKeySequence('Ctrl+d'), self)
         self.shortcutDeleteTrack.activated.connect(self.removeTracks)
-        self.shortcutContextMenu = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+g'), self)
+        self.shortcutContextMenu = QtGui.QShortcut(QtGui.QKeySequence('Ctrl+g'), self)
         self.shortcutContextMenu.activated.connect(self.showContextMenuAtCurrentItem)
-        self.shortcutCutTracks = QtWidgets.QShortcut(QtGui.QKeySequence.StandardKey.Cut, self)
+        self.shortcutCutTracks = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.Cut, self)
         self.shortcutCutTracks.activated.connect(self.cutTracks)
-        self.shortcutCopyTracks = QtWidgets.QShortcut(QtGui.QKeySequence.StandardKey.Copy, self)
+        self.shortcutCopyTracks = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.Copy, self)
         self.shortcutCopyTracks.activated.connect(self.copyTracks)
-        self.shortcutPasteTracks = QtWidgets.QShortcut(QtGui.QKeySequence.StandardKey.Paste, self)
+        self.shortcutPasteTracks = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.Paste, self)
         self.shortcutPasteTracks.activated.connect(self.pasteTracks)
 
     def cutTracks(self):
@@ -127,15 +127,15 @@ class YtTrackView(QtWidgets.QTableView):
     def showContextMenu(self, pos):
         menu = QtWidgets.QMenu()
 
-        findSimilarTracks = QtWidgets.QAction('Find &related tracks', self)
+        findSimilarTracks = QtGui.QAction('Find &related tracks', self)
         menu.addAction(findSimilarTracks)        
-        removeDuplicates = QtWidgets.QAction('Remove &duplicate tracks', self)
+        removeDuplicates = QtGui.QAction('Remove &duplicate tracks', self)
         menu.addAction(removeDuplicates)
-        refreshTracks = QtWidgets.QAction('Refresh track &info', self)
+        refreshTracks = QtGui.QAction('Refresh track &info', self)
         menu.addAction(refreshTracks)
-        refreshThumbnails = QtWidgets.QAction('Refresh &thumbnails', self)
+        refreshThumbnails = QtGui.QAction('Refresh &thumbnails', self)
         menu.addAction(refreshThumbnails)
-        action = menu.exec_(pos)
+        action = menu.exec(pos)
         localPos = self.mapFromGlobal(pos)
         
         if action == findSimilarTracks:
@@ -219,10 +219,7 @@ class YtTrackView(QtWidgets.QTableView):
         be faster to add and remove only those rows, but as long as a complete refresh is
         not too slow, data can be reloaded using this method.
         """
-        scrollbar = self.verticalScrollBar()
-        scrollbarPosition = scrollbar.sliderPosition()
         self.itemModel.refreshModel()
-        scrollbar.setSliderPosition(scrollbarPosition)
 
         selectedIndexes = self.itemModel.trackIndexes(self.trackSelection)
         model = self.selectionModel()
@@ -231,12 +228,21 @@ class YtTrackView(QtWidgets.QTableView):
         for index in selectedIndexes:
             selection.select(index, index)
         model.select(selection, flags)
-
+        
+        # Setting the current index will move the viewport so one 
+        # also needs to restore the scrollbar position to prevent 
+        # jumping when scrolling while tracks are being added.
+        verticalScroll = self.verticalScrollBar()
+        verticalPosition = verticalScroll.value()
+        horizontalScroll = self.horizontalScrollBar()
+        horizontalPosition = horizontalScroll.value()
         if self.trackCurrent == None:
             return
         currentIndexes = self.itemModel.trackIndexes([self.trackCurrent])
         if len(currentIndexes) > 0:
             model.setCurrentIndex(currentIndexes[0], flags)
+        verticalScroll.setValue(verticalPosition)
+        horizontalScroll.setValue(horizontalPosition)
 
     def currentTrack(self) -> YtTrack:
         # Remember that the current item is different from the selected items. The first one
@@ -275,10 +281,10 @@ class YtTrackView(QtWidgets.QTableView):
         mimeData = QtCore.QMimeData()
         mimeData.setText(json.dumps(trackIds))
 
-        icon = self.style().standardIcon(QtWidgets.QStyle.SP_FileIcon)
+        icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileIcon)
         pixmap = icon.pixmap(QtCore.QSize(64, 64))
 
         drag = QtGui.QDrag(self)
         drag.setMimeData(mimeData)
         drag.setPixmap(pixmap)
-        drag.exec(QtCore.Qt.CopyAction)
+        drag.exec(QtCore.Qt.DropAction.CopyAction)

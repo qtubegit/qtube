@@ -1,4 +1,4 @@
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 import json
 import shlex
 
@@ -24,7 +24,13 @@ class YtTrackInfoWorker(QtCore.QRunnable):
                 cmd = f'youtube-dl -j -- {shlex.quote(self.track.videoId)}'
                 results, errors = YtShell.pipeOutput(cmd)                
             else:
-                cmd = f'youtube-dl -j -- ytsearch1:{shlex.quote(self.track.title)}'
+                search = self.track.title
+                # Remove characters that needlessly eliminate matches.
+                remove = '"/'
+                for c in remove:
+                    search = search.replace(c, ' ')    
+                search = shlex.quote(search)
+                cmd = f'youtube-dl -j -- ytsearch1:{search}'
                 results, errors = YtShell.pipeOutput(cmd)
             results = results.strip()
             jvid = json.loads(results)
@@ -59,9 +65,12 @@ class YtTrackInfoWorker(QtCore.QRunnable):
             # from the JSON parser, which is not very informative, pass on the error message from 
             # youtube-dl, which contains error messages more useful to the user. If we did not get
             # any error information from youtube-dl, pass on the error message from the exception, 
-            # which might be more less inelligible, but better than nothing.
-            if errors == None:
-                errors = f'There was a problem retrieving track information:\n{e}'
+            # which might be more less inelligible, but better than nothing.            
+            if results == '':
+                errors = 'Did not find any matching tracks.'
+            if errors == None or errors == '':
+                errors = f'Unable to retrieve track information:\n{e}'
+            errors = f'{errors}\n\nCommand:\n{cmd}'
             self.trackError.emit(errors)
         finally: 
             self.threadFinished.emit()

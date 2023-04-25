@@ -46,10 +46,17 @@
             });
         }
         function onPlayerReady(event) {
+            // I have found it to be more pleasant for the initial 
+            // volume to be right about the middle of the maximum.
+            let initialVolume = 50;
+            player.setVolume(initialVolume);
+            qwebchannel.playerVolumeChanged(initialVolume);
+
             setInterval(function () {
                 let position = player.getCurrentTime();
                 qwebchannel.playerProgressChanged(position);
             }, 1000);
+            qwebchannel.playerReady();
         }
         function onPlayerStateChange(event) {
             qwebchannel.playerStateChanged(event.data);

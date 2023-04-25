@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui
+from PyQt6 import QtCore, QtGui
 import pathlib
 import urllib, urllib.request
 from YtThumbnailCache import YtThumbnailCache

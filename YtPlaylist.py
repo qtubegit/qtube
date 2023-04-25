@@ -20,6 +20,8 @@ class YtPlaylist:
         return self.name == other.name
 
     def __getitem__(self, key: int) -> YtTrack:
+        if len(self.tracks) == 0:
+            return None
         return self.tracks[key % len(self.tracks)]
 
     def __iter__(self):

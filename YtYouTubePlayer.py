@@ -1,4 +1,4 @@
-from PyQt5 import QtWebEngineWidgets, QtCore, QtWebChannel
+from PyQt6 import QtWebEngineWidgets, QtWebEngineCore, QtCore, QtWebChannel
 
 import enum
 import http.server
@@ -27,11 +27,11 @@ class YtYouTubePlayer(QtCore.QObject):
         super().__init__()
 
         self.webView = QtWebEngineWidgets.QWebEngineView()
-        self.webpage = QtWebEngineWidgets.QWebEnginePage(self.webView)
+        self.webpage = QtWebEngineCore.QWebEnginePage(self.webView)
         self.webpage.profile().setPersistentCookiesPolicy(
-            QtWebEngineWidgets.QWebEngineProfile.ForcePersistentCookies)
+            QtWebEngineCore.QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies)
         self.webpage.settings().setAttribute(
-            QtWebEngineWidgets.QWebEngineSettings.PlaybackRequiresUserGesture, 
+            QtWebEngineCore.QWebEngineSettings.WebAttribute.PlaybackRequiresUserGesture, 
             False)
         self.webView.setPage(self.webpage)
 
@@ -113,6 +113,10 @@ class YtYouTubePlayer(QtCore.QObject):
         return self.playerState
     
     @QtCore.pyqtSlot(int)
+    def playerVolumeChanged(self, volume):
+        self.volumeChanged.emit(volume)
+
+    @QtCore.pyqtSlot(int)
     def playerProgressChanged(self, position):
         self.positionChanged.emit(position)
 
@@ -120,4 +124,9 @@ class YtYouTubePlayer(QtCore.QObject):
     def playerStateChanged(self, state):
         self.playerState = state
         self.playerStatusChanged.emit(YtPlayerState(state))
+
+    @QtCore.pyqtSlot()
+    def playerReady(self):
+        if self.activeTrack != None:
+            self.playTrack(self.activeTrack)
 

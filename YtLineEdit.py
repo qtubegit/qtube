@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 
 # Subclassed to handle key press events. There appears to currently 
 # be no signal for this and this is the proper way to catch them.

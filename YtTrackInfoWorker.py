@@ -2,6 +2,7 @@ from PyQt6 import QtCore
 import json
 import shlex
 
+from YtSafeSignal import YtSafeSignal
 from YtShell import YtShell
 from YtThumbnailWorker import YtThumbnailWorker
 from YtTrackInfoSignals import YtTrackInfoSignals
@@ -12,7 +13,7 @@ class YtTrackInfoWorker(QtCore.QRunnable):
         self.track = track
         self.signals = YtTrackInfoSignals()
         self.trackUpdated = self.signals.trackUpdated
-        self.trackError = self.signals.trackError
+        self.trackError = self.signals.trackError        
         self.refreshTitle = refreshTitle
         self.refreshThumbnail = refreshThumbnail
 
@@ -21,16 +22,17 @@ class YtTrackInfoWorker(QtCore.QRunnable):
         try:
             if self.track.videoId:
                 cmd = f'youtube-dl -j -- {shlex.quote(self.track.videoId)}'
-                results, errors = YtShell.pipeOutput(cmd)                
+                results, errors = YtShell.pipeOutput(cmd)
             else:
                 search = self.track.title
                 # Remove characters that needlessly eliminate matches.
                 remove = '"/'
                 for c in remove:
-                    search = search.replace(c, ' ')    
+                    search = search.replace(c, ' ')
                 search = shlex.quote(search)
-                cmd = f'youtube-dl -j -- ytsearch1:{search}'
+                cmd = f'youtube-dl -j -- ytsearch1:{search}'                
                 results, errors = YtShell.pipeOutput(cmd)
+
             results = results.strip()
             jvid = json.loads(results)
             duration = int(jvid['duration'])
@@ -54,12 +56,8 @@ class YtTrackInfoWorker(QtCore.QRunnable):
                 # Retrieve low quality icons unless we are doing an explicit refresh.
                 # This will cause first plays of a track to be faster.
                 iconUrl = jvid['thumbnails'][0]['url']
-
-            try: 
-                self.trackUpdated.emit(self.track)
-            except AttributeError:
-                # Signals can be disconnected already during application shutdown.
-                pass
+            
+            YtSafeSignal.emit(self.trackUpdated, self.track)
 
             if self.refreshThumbnail or self.track.icon == None:
                 worker = YtThumbnailWorker(iconUrl, self.track, self.signals)
@@ -80,10 +78,5 @@ class YtTrackInfoWorker(QtCore.QRunnable):
                 errors = f'Unable to retrieve track information:\n{e}'
             errors = f'{errors}\n\nCommand:\n{cmd}'
             
-            try:
-                self.trackError.emit(errors)
-            except AttributeError:
-                # Signals can be disconnected already during application shutdown.
-                pass
-
+            YtSafeSignal.emit(self.trackError, errors)
             

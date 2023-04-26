@@ -52,6 +52,7 @@ class YtYouTubePlayer(QtCore.QObject):
         self.playerState = None
         self.activeTrack = None
         self.waitingForVideoId = False
+        self.isPlayerReady = False
 
     def startServer(self):
         # For pyinstaller.
@@ -71,20 +72,30 @@ class YtYouTubePlayer(QtCore.QObject):
         finally:
             if s != None:
                 s.shutdown()
-            
+    
+    def tryRunJavascript(self, js):
+        if not self.isPlayerReady:
+            # Ignore all Javascript calls until player is ready.
+            return
+        try:
+            page = self.webView.page()
+            page.runJavaScript(js)
+        except Exception:
+            print(f'Unable to run javascript:\n{js}')
+
     def setVolume(self, volume):
-        self.webView.page().runJavaScript(f'setVolume("{volume}")')
+        self.tryRunJavascript(f'setVolume("{volume}")')
         self.volumeChanged.emit(volume)
 
     def seekVideo(self, position):
-        self.webView.page().runJavaScript(f'seekTo("{position}")')
+        self.tryRunJavascript(f'seekTo("{position}")')
 
     def loadVideo(self, videoId):
-        self.webView.page().runJavaScript(f'loadVideo("{videoId}")')
+        self.tryRunJavascript(f'loadVideo("{videoId}")')
 
     def cueVideo(self, videoId, startPosition):
-        self.webView.page().runJavaScript(f'cueVideo("{videoId}", {startPosition})')
-
+        self.tryRunJavascript(f'cueVideo("{videoId}", {startPosition})')
+        
     def trackUpdated(self, track):
         if track == self.activeTrack and self.waitingForVideoId:
             self.playTrack(track)
@@ -104,10 +115,10 @@ class YtYouTubePlayer(QtCore.QObject):
         return self.activeTrack
 
     def play(self):
-        self.webView.page().runJavaScript(f'playVideo()')
+        self.tryRunJavascript(f'playVideo()')
 
     def pause(self):
-        self.webView.page().runJavaScript(f'pauseVideo()')
+        self.tryRunJavascript(f'pauseVideo()')
 
     def getState(self):
         return self.playerState
@@ -127,6 +138,7 @@ class YtYouTubePlayer(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def playerReady(self):
+        self.isPlayerReady = True
         if self.activeTrack != None:
             self.playTrack(self.activeTrack)
 

@@ -37,10 +37,11 @@ class YtThumbnailCache:
             iconPath = pathlib.Path(YtThumbnailCache.thumbnailPath, videoId)
             with open(iconPath, 'rb') as fp:
                 data = fp.read()
-                pixmap = QtGui.QPixmap()
-                pixmap.loadFromData(data)
-                icon = QtGui.QIcon(pixmap)
-                YtThumbnailCache.iconCache[videoId] = icon
-                return icon
-        except:
+        except FileNotFoundError:
             return None
+
+        pixmap = QtGui.QPixmap()
+        pixmap.loadFromData(data)
+        icon = QtGui.QIcon(pixmap)
+        YtThumbnailCache.iconCache[videoId] = icon
+        return icon

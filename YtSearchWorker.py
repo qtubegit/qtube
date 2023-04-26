@@ -1,6 +1,8 @@
 import abc
 from PyQt6 import QtCore
 
+from YtSafeSignal import YtSafeSignal
+
 class YtSearchSignals(QtCore.QObject):
     tracksFound = QtCore.pyqtSignal(list)
     searchFinished = QtCore.pyqtSignal(object)
@@ -22,9 +24,9 @@ class YtSearchWorker(QtCore.QRunnable):
         try:
             self.search()
         except Exception as e:
-            self.searchError.emit(f'An error occurred during search:\n{e}')
+            YtSafeSignal.emit(self.searchError, f'An error occurred during search:\n{e}')
         finally:
-            self.searchFinished.emit(self)
+            YtSafeSignal.emit(self.searchFinished, self)
 
     @abc.abstractmethod
     def search(self):

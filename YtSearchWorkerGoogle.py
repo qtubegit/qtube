@@ -1,7 +1,9 @@
 import html
 import requests
-from YtTrack import YtTrack
+
+from YtSafeSignal import YtSafeSignal
 from YtSearchWorker import YtSearchWorker
+from YtTrack import YtTrack
 
 class YtSearchWorkerGoogle(YtSearchWorker):
     def __init__(self, apiKeys, query, trackLimit=350):
@@ -53,5 +55,6 @@ class YtSearchWorkerGoogle(YtSearchWorker):
             title = html.unescape(item['snippet']['title'])
             track = YtTrack(title, **tags)
             tracks.append(track)
-        self.tracksFound.emit(tracks)
+
+        YtSafeSignal.emit(self.tracksFound, tracks)
 

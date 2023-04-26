@@ -1,8 +1,9 @@
 import requests
 import urllib
 
-from YtTrack import YtTrack
+from YtSafeSignal import YtSafeSignal
 from YtSearchWorker import YtSearchWorker
+from YtTrack import YtTrack
 
 class YtSearchWorkerLastFm(YtSearchWorker):
     def __init__(self, term, apiKey, trackLimit=350, relatedTrack=None):
@@ -43,7 +44,7 @@ class YtSearchWorkerLastFm(YtSearchWorker):
             track = t['name']
             ytTrack = YtTrack(f'{artist} - {track}', artist=artist, track=track, duration=duration)
             ytTracks.append(ytTrack)
-        self.tracksFound.emit(ytTracks)
+        YtSafeSignal.emit(self.tracksFound, ytTracks)
 
     def searchTerm(self):
         page = 0
@@ -90,7 +91,7 @@ class YtSearchWorkerLastFm(YtSearchWorker):
                 if len(self.seenTracks) > self.trackLimit:
                     ytTracks.append(ytTrack)
                     break
-        self.tracksFound.emit(ytTracks)
+        YtSafeSignal.emit(self.tracksFound, ytTracks)
             
     def searchArtistTracks(self, artist: str):
         artist = urllib.parse.quote(artist)
@@ -123,6 +124,7 @@ class YtSearchWorkerLastFm(YtSearchWorker):
                 ytTracks.append(ytTrack)
                 if len(self.seenTracks) > self.trackLimit:
                     break
-        self.tracksFound.emit(ytTracks)
+
+        YtSafeSignal.emit(self.tracksFound, ytTracks)
 
 

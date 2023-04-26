@@ -1,10 +1,11 @@
-from PyQt6 import QtCore, QtGui
+from PyQt6 import QtCore, QtGui, QtWidgets
 import pathlib
 import urllib, urllib.request
-from YtThumbnailCache import YtThumbnailCache
 
-from YtTrack import YtTrack
+from YtSafeSignal import YtSafeSignal
+from YtThumbnailCache import YtThumbnailCache
 from YtTrackInfoSignals import YtTrackInfoSignals
+from YtTrack import YtTrack
 
 class YtThumbnailWorker(QtCore.QRunnable):
     def __init__(self, iconUrl: str, track: YtTrack, signals: YtTrackInfoSignals):
@@ -19,7 +20,7 @@ class YtThumbnailWorker(QtCore.QRunnable):
             YtThumbnailCache.updateThumbnail(self.track.videoId, icon)
             if icon == None:
                 return
-            self.signals.trackUpdated.emit(self.track)
+            YtSafeSignal.emit(self.signals.trackUpdated, self.track)
         except Exception as e:
             # Can happen when the HTTP request returns a 404, for example.
             print(f'Could not retrieve icon "{self.iconUrl}":\n{e}')
@@ -28,6 +29,11 @@ class YtThumbnailWorker(QtCore.QRunnable):
         if url == None:
             return None
         data = urllib.request.urlopen(url).read()
+
+        # QPixmap requires a running QApplication. A worker running after application 
+        # shutdown can trigger a SIGABORT and cause an unclean exit.
+        if QtWidgets.QApplication.instance() == None:
+            return
         pixmap = QtGui.QPixmap()
         pixmap.loadFromData(data)
         icon = QtGui.QIcon(pixmap)

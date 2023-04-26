@@ -13,23 +13,29 @@
         new QWebChannel(qt.webChannelTransport, function (channel) {
             qwebchannel = channel.objects.qwebchannel;
         });
+        function loadVideo(videoId) {
+            if (player.loadVideoById !== undefined) {
+                player.loadVideoById(videoId, 0, 'small');
+            }
+        }
         function playVideo() {
-            player.playVideo();
+            if (player.playVideo !== undefined) {
+                player.playVideo();
+            }
+        }
+        function cueVideo(videoId, startPosition) {
+            if (player.cueVideoById !== undefined) {
+                player.cueVideoById(videoId, startPosition);
+            }
         }
         function pauseVideo() {
             player.pauseVideo();
-        }
-        function loadVideo(videoId) {
-            player.loadVideoById(videoId, 0, 'small');
         }
         function seekTo(position) {
             player.seekTo(position, true);
         }
         function setVolume(volume) {
             player.setVolume(volume);
-        }
-        function cueVideo(videoId, startPosition) {
-            player.cueVideoById(videoId, startPosition);
         }
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";

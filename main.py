@@ -1,6 +1,6 @@
 #!python3
 import os
-from PyQt6 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtGui, QtWidgets
 import sys
 
 from YtMainWindow import YtMainWindow
@@ -13,7 +13,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     icon = QtGui.QIcon('icon.ico')
     app.setWindowIcon(icon)
-
     win = YtMainWindow()
     win.show()
     sys.exit(app.exec())

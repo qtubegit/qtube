@@ -1,9 +1,9 @@
 import json
-import os
 
-from YtShell import YtShell
 from YtPlaylistManager import YtTrack
+from YtSafeSignal import YtSafeSignal
 from YtSearchWorker import YtSearchWorker
+from YtShell import YtShell
 
 class YtSearchWorkerYtdl(YtSearchWorker):
     def __init__(self, term):
@@ -23,7 +23,7 @@ class YtSearchWorkerYtdl(YtSearchWorker):
                 channel = jvid['uploader']
                 duration = jvid['duration']
                 track = YtTrack(title, url=videoId, duration=duration, channel=channel)
-                self.tracksFound.emit([track]) 
+                YtSafeSignal.emit(self.tracksFound, [track]) 
         except Exception as e:
             if errors != None:
                 e = Exception(errors)

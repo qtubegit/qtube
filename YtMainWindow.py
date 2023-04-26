@@ -8,6 +8,7 @@ import typing
 from YtAspectRatioLabel import YtAspectRatioLabel
 from YtSearchWorkerGoogle import YtSearchWorkerGoogle
 from YtInputWorker import YtInputWorker
+from YtLineEdit import YtLineEdit
 from YtPlaylistManager import YtPlayMode, YtPlaylistManager
 from YtPlaylistWorker import YtPlaylistWorker
 from YtPlaylistView import YtPlaylistView
@@ -19,13 +20,11 @@ from YtTrackView import YtTrackView
 from YtTrack import YtTrack
 from YtSearchWorkerLastFm import YtSearchWorkerLastFm
 from YtYouTubePlayer import YtYouTubePlayer, YtPlayerState
-from YtLineEdit import YtLineEdit
 
 class YtMainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.configPath = pathlib.Path(pathlib.Path.home(), '.qtube')
-
         # View your keys: https://www.last.fm/api/accounts
         # Create one: https://www.last.fm/api/account/create
         self.lastFmApiKeyPath = pathlib.Path(self.configPath, 'lastfm_apikey')

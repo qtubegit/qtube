@@ -23,9 +23,11 @@ from YtLineEdit import YtLineEdit
 class YtMainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.configPath = pathlib.Path(pathlib.Path.home(), '.qtube')
+
         # View your keys: https://www.last.fm/api/accounts
         # Create one: https://www.last.fm/api/account/create
-        self.lastFmApiKeyPath = pathlib.Path(pathlib.Path.home(), '.qtube', 'lastfm_apikey')
+        self.lastFmApiKeyPath = pathlib.Path(self.configPath, 'lastfm_apikey')
         self.lastFmApiKey = None
         try:
             with open(self.lastFmApiKeyPath) as fp:
@@ -35,7 +37,7 @@ class YtMainWindow(QtWidgets.QWidget):
             print('Last.fm search will be disabled.')
 
         self.googleKeys = None
-        self.googleKeysPath = pathlib.Path(pathlib.Path.home(), '.qtube', 'google_keys')
+        self.googleKeysPath = pathlib.Path(self.configPath, 'google_keys')
         try:
             with open(self.googleKeysPath) as fp:
                 # Do not replace this with "readlines()": it will leave a 
@@ -49,7 +51,7 @@ class YtMainWindow(QtWidgets.QWidget):
         self.playlistManager = YtPlaylistManager()
 
         self.threadPool = QtCore.QThreadPool.globalInstance()
-        self.threadPool.setMaxThreadCount(100)
+        self.threadPool.setMaxThreadCount(35)
 
         self.searchThreads = []
         self.searchWorker = None

@@ -131,8 +131,17 @@ class YtPlaylistManager(QtCore.QObject):
         if self.activeTrack == None:
             fd.truncate()
             return
+        
         playlist = self.activeTrack.playlist
-        index = playlist.tracks.index(self.activeTrack)
+
+        try:
+            index = playlist.tracks.index(self.activeTrack)
+        except ValueError:
+            # A playing track might have been removed from its playlist.
+            # Such a track is not resumed.
+            fd.truncate()
+            return
+
         playingTrack = {
             'playlist': playlist.name,
             'trackIndex': index

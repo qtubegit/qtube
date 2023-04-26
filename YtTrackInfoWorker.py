@@ -11,7 +11,6 @@ class YtTrackInfoWorker(QtCore.QRunnable):
         super(QtCore.QRunnable, self).__init__()
         self.track = track
         self.signals = YtTrackInfoSignals()
-        self.threadFinished = self.signals.threadFinished
         self.trackUpdated = self.signals.trackUpdated
         self.trackError = self.signals.trackError
         self.refreshTitle = refreshTitle
@@ -56,12 +55,17 @@ class YtTrackInfoWorker(QtCore.QRunnable):
                 # This will cause first plays of a track to be faster.
                 iconUrl = jvid['thumbnails'][0]['url']
 
-            self.trackUpdated.emit(self.track)
+            try: 
+                self.trackUpdated.emit(self.track)
+            except AttributeError:
+                # Signals can be disconnected already during application shutdown.
+                pass
+
             if self.refreshThumbnail or self.track.icon == None:
                 worker = YtThumbnailWorker(iconUrl, self.track, self.signals)
                 threadPool = QtCore.QThreadPool.globalInstance()
                 threadPool.start(worker)
-
+        
         except Exception as e:
             # Some of the immediate exceptions here are issues parsing the JSON returned above.
             # But this can have different causes. For example, when the channel of a video has
@@ -75,6 +79,11 @@ class YtTrackInfoWorker(QtCore.QRunnable):
             if errors == None or errors == '':
                 errors = f'Unable to retrieve track information:\n{e}'
             errors = f'{errors}\n\nCommand:\n{cmd}'
-            self.trackError.emit(errors)
-        finally: 
-            self.threadFinished.emit()
+            
+            try:
+                self.trackError.emit(errors)
+            except AttributeError:
+                # Signals can be disconnected already during application shutdown.
+                pass
+
+            

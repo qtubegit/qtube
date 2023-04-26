@@ -347,7 +347,7 @@ class YtMainWindow(QtWidgets.QWidget):
 
         # A gray font means that a search is running. I do not know for sure if
         # this will look good on all system themes, e.g. light vs. dark mode.
-        self.searchEdit.setStyleSheet('color: gray')
+        self.searchEdit.setStyleSheet('border: 1px solid yellow')
         self.searchWorker.tracksFound.connect(self.tracksFound)
         self.searchWorker.searchError.connect(self.showMessage)
         self.searchWorker.searchFinished.connect(self.searchFinished)
@@ -359,7 +359,7 @@ class YtMainWindow(QtWidgets.QWidget):
         # Other threads might still be running, but we are only interested in the
         # chronologically last one sent off.
         if thread == self.searchWorker:
-            # Return font to normal to indicate search has finished.
+            # Return style to normal to indicate that search has finished.
             self.searchEdit.setStyleSheet('')
 
     def showMessage(self, error):

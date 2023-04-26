@@ -48,6 +48,9 @@ class YtMainWindow(QtWidgets.QWidget):
         self.searchResultsName = '# Search Results'
         self.playlistManager = YtPlaylistManager()
 
+        self.threadPool = QtCore.QThreadPool.globalInstance()
+        self.threadPool.setMaxThreadCount(100)
+
         self.searchThreads = []
         self.searchWorker = None
         self.trackThreads = []
@@ -55,8 +58,7 @@ class YtMainWindow(QtWidgets.QWidget):
         self.playingTrack = None
         self.timeSinceLastPlay = None
         self.playlistWorker = YtPlaylistWorker(self.playlistManager)
-        threadPool = QtCore.QThreadPool.globalInstance()
-        threadPool.start(self.playlistWorker)
+        self.threadPool.start(self.playlistWorker)
         self.setupUi()
 
         # Restore the last track that was playing when player quit.
@@ -351,8 +353,7 @@ class YtMainWindow(QtWidgets.QWidget):
         self.searchWorker.tracksFound.connect(self.tracksFound)
         self.searchWorker.searchError.connect(self.showMessage)
         self.searchWorker.searchFinished.connect(self.searchFinished)
-        threadPool = QtCore.QThreadPool.globalInstance()
-        threadPool.start(self.searchWorker)
+        self.threadPool.start(self.searchWorker)
         self.playlistManager.clearPlaylist(self.searchResultsName)
     
     def searchFinished(self, thread):
@@ -389,8 +390,7 @@ class YtMainWindow(QtWidgets.QWidget):
             worker = YtTrackInfoWorker(track)
             worker.trackUpdated.connect(self.playlistManager.updateTrack)
             worker.trackError.connect(self.showMessage)
-            threadPool = QtCore.QThreadPool.globalInstance()
-            threadPool.start(worker)
+            self.threadPool.start(worker)
 
     def updateProgressBar(self, track):
         if track.duration == None:

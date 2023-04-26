@@ -27,6 +27,7 @@ class YtTrackView(QtWidgets.QTableView):
         self.playlistManager.trackActivated.connect(self.trackActivated)
         self.playlistManager.playlistRemoved.connect(self.playlistRemoved)
         self.playlistManager.playlistCleared.connect(self.playlistCleared)
+        self.playlistManager.trackUpdated.connect(self.trackUpdated)
         self.itemModel.modelChanged.connect(self.refreshModel)
 
         self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)

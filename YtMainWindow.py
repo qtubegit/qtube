@@ -68,6 +68,7 @@ class YtMainWindow(QtWidgets.QWidget):
         currentTrack = self.playlistManager.getCurrentTrack()
         if currentTrack != None:
             self.playlistManager.activateTrack(currentTrack)
+            self.trackView.showPlaylist(currentTrack.playlist)
 
     def setupUi(self):
         self.pauseIcon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaPause)
@@ -118,7 +119,6 @@ class YtMainWindow(QtWidgets.QWidget):
         self.positionEdit.returnPressed.connect(self.positionEdited)
         self.player.playerStatusChanged.connect(self.playerStatusChanged)
         self.player.volumeChanged.connect(self.volumeChanged)
-        self.playlistManager.trackUpdated.connect(self.trackView.trackUpdated)
         self.playlistManager.trackUpdated.connect(self.player.trackUpdated)
         self.playlistManager.trackActivated.connect(self.player.playTrack)
         self.player.positionChanged.connect(self.positionEdit.update)
@@ -223,6 +223,8 @@ class YtMainWindow(QtWidgets.QWidget):
         self.shortcutFocusPosition.activated.connect(self.positionEdit.setFocus)
         self.shortcutFocusPosition = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+r"), self)
         self.shortcutFocusPosition.activated.connect(self.trackView.arrangeTracks)
+        self.shortcutFocusPosition = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+l"), self)
+        self.shortcutFocusPosition.activated.connect(self.playmodePressed)
         self.shortcutFullscreen = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.FullScreen, self)
         self.shortcutFullscreen.activated.connect(self.toggleFullscreen)
 

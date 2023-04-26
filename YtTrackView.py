@@ -128,40 +128,45 @@ class YtTrackView(QtWidgets.QTableView):
     def showContextMenu(self, pos):
         menu = QtWidgets.QMenu()
 
-        findSimilarTracks = QtGui.QAction('Find &related tracks', self)
-        menu.addAction(findSimilarTracks)        
+        findSimilarTracks = QtGui.QAction('Find &similar tracks', self)
+        menu.addAction(findSimilarTracks)
         removeDuplicates = QtGui.QAction('Remove &duplicate tracks', self)
         menu.addAction(removeDuplicates)
         refreshTracks = QtGui.QAction('Refresh track &info', self)
         menu.addAction(refreshTracks)
         refreshThumbnails = QtGui.QAction('Refresh &thumbnails', self)
         menu.addAction(refreshThumbnails)
+        actionMap = {
+            findSimilarTracks: self.findSimilar,
+            removeDuplicates: self.removeDuplicates,
+            refreshTracks: self.refreshTracks,
+            refreshThumbnails: self.refreshThumbnails,
+        }
         action = menu.exec(pos)
-        localPos = self.mapFromGlobal(pos)
-        
-        if action == findSimilarTracks:
-            row = self.rowAt(localPos.y())
-            index = self.itemModel.index(row, 0)
-            track = self.itemModel.getTrack(index)
-            self.findRelatedTracks.emit(track)
+        if action != None:
+            actionMap[action]()
 
-        if action == removeDuplicates:
-            tracks = self.selectedTracks()
-            self.playlistManager.removeDuplicates(self.selectedPlaylist, tracks)
+    def findSimilar(self):
+        track = self.selectedTracks()[0]
+        self.findRelatedTracks.emit(track)
 
-        if action == refreshTracks:
-            for track in self.selectedTracks():
-                worker = YtTrackInfoWorker(track, refreshTitle = True)
-                worker.trackUpdated.connect(self.playlistManager.updateTrack)
-                threadPool = QtCore.QThreadPool.globalInstance()
-                threadPool.start(worker)
+    def removeDuplicates(self):
+        tracks = self.selectedTracks()
+        self.playlistManager.removeDuplicates(self.selectedPlaylist, tracks)
 
-        if action == refreshThumbnails:
-            for track in self.selectedTracks():
-                worker = YtTrackInfoWorker(track, refreshThumbnail = True)
-                worker.trackUpdated.connect(self.playlistManager.updateTrack)
-                threadPool = QtCore.QThreadPool.globalInstance()
-                threadPool.start(worker)
+    def refreshTracks(self):
+        for track in self.selectedTracks():
+            worker = YtTrackInfoWorker(track, refreshTitle = True)
+            worker.trackUpdated.connect(self.playlistManager.updateTrack)
+            threadPool = QtCore.QThreadPool.globalInstance()
+            threadPool.start(worker)
+
+    def refreshThumbnails(self):
+        for track in self.selectedTracks():
+            worker = YtTrackInfoWorker(track, refreshThumbnail = True)
+            worker.trackUpdated.connect(self.playlistManager.updateTrack)
+            threadPool = QtCore.QThreadPool.globalInstance()
+            threadPool.start(worker)
 
     def trackUpdated(self, track: YtTrack):
         if track.playlist == self.selectedPlaylist:

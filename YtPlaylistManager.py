@@ -36,9 +36,10 @@ class YtPlaylistManager(QtCore.QObject):
         self.playlists = []
         self.playMode = YtPlayMode.Normal
         self.isDirty = False
-        self.currentTrackPath = pathlib.Path(pathlib.Path.home(),  '.qtube/currentTrack.json')
-        self.playlistPath = pathlib.Path(pathlib.Path.home(),  '.qtube/playlists.json')
-        self.thumbnailPath = pathlib.Path(pathlib.Path.home(), '.qtube/thumbnails')
+        self.configPath = pathlib.Path(pathlib.Path.home(), '.qtube')
+        self.currentTrackPath = pathlib.Path(self.configPath,  'currentTrack.json')
+        self.playlistPath = pathlib.Path(self.configPath,  'playlists.json')
+        self.thumbnailPath = pathlib.Path(self.configPath, 'thumbnails')
         self.thumbnailPath.mkdir(parents=True, exist_ok=True)
         self.iconCache = {}
         self.loadPlaylists()

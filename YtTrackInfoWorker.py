@@ -49,7 +49,7 @@ class YtTrackInfoWorker(QtCore.QRunnable):
                     t['width'] * t['height'] \
                     if 'width' in t and 'height' in t \
                     else 0
-                sv = sorted(jvid['thumbnails'], key = selector)
+                sv = sorted(jvid['thumbnails'], key=selector)
                 iconUrl = sv[-1]['url']
             else:
                 # Retrieve low quality icons unless we are doing an explicit refresh.

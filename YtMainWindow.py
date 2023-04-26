@@ -1,4 +1,5 @@
 import datetime
+import os
 import pathlib
 import time
 from PyQt6 import QtCore, QtWidgets, QtGui
@@ -51,7 +52,7 @@ class YtMainWindow(QtWidgets.QWidget):
         self.playlistManager = YtPlaylistManager()
 
         self.threadPool = QtCore.QThreadPool.globalInstance()
-        self.threadPool.setMaxThreadCount(35)
+        self.threadPool.setMaxThreadCount(os.cpu_count() * 10)
 
         self.searchThreads = []
         self.searchWorker = None

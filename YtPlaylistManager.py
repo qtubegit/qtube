@@ -224,7 +224,7 @@ class YtPlaylistManager(QtCore.QObject):
         if self.activeTrack.playlist == None:
             return None
         playlist = self.activeTrack.playlist
-        trackIndex = playlist.index(self.activeTrack)
+        trackIndex = playlist.trackIndex(self.activeTrack)
         
         if self.playMode == YtPlayMode.Shuffle:
             index = numpy.random.choice([

@@ -128,7 +128,7 @@ class YtTrackModel(QtCore.QAbstractTableModel):
             key = key)
         self.filter(self.filterTerm)
         self.modelChanged.emit()
-        self.playlistManager.saveCurrentTrack()
+        self.playlistManager.savePlayingTrack()
 
     def setActivePlaylist(self, playlist: YtPlaylist):
         self.beginResetModel()

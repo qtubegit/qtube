@@ -61,6 +61,8 @@ class YtPlaylistManager(QtCore.QObject):
         playlist = self.playlistByName(plName)
         if playlist == None:
             return
+        if self.activeTrack and self.activeTrack.playlist == playlist:
+            self.activeTrack.playlist = None
         playlist.tracks = []
         self.playlistCleared.emit(playlist)
         self.isDirty = True
@@ -100,22 +102,6 @@ class YtPlaylistManager(QtCore.QObject):
                 playlist.tracks.append(ytTrack)
             self.playlists.append(playlist)
 
-    def getCurrentTrack(self) -> YtTrack:
-        '''Returns the last track that was playing when the player was last running.'''
-        try:
-            with open(self.currentTrackPath, 'r+') as fp:
-                currentTrack = json.load(fp)
-        except json.decoder.JSONDecodeError:
-            return None
-        except FileNotFoundError:
-            return None
-
-        currentPlaylist = self.getPlaylist(currentTrack['playlist'])
-        if currentPlaylist == None:
-            return None
-        currentTrack = currentPlaylist[currentTrack['trackIndex']]
-        return currentTrack
-
     def savePlaylists(self):
         playlists = { pl.name: [t.getTags() for t in pl] for pl in self.playlists }
         serialized = json.dumps(playlists)
@@ -125,29 +111,46 @@ class YtPlaylistManager(QtCore.QObject):
 
     # This must be called every time a track's index in a playlist changes,
     # because the current track is identified by playlist name and index.
-    def saveCurrentTrack(self):
+    def savePlayingTrack(self):
         '''Saves the currently playing track.'''
         fd = open(self.currentTrackPath, 'w+')
         if self.activeTrack == None:
             fd.truncate()
+            fd.close()
             return
-        
+        playlistName = None
+        trackIndex = None
         playlist = self.activeTrack.playlist
-
-        try:
-            index = playlist.tracks.index(self.activeTrack)
-        except ValueError:
-            # A playing track might have been removed from its playlist.
-            # Such a track is not resumed.
-            fd.truncate()
-            return
-
+        if playlist != None:
+            playlistName = playlist.name
+            trackIndex = playlist.trackIndex(self.activeTrack)
         playingTrack = {
-            'playlist': playlist.name,
-            'trackIndex': index
+            'playlist': playlistName,
+            'trackIndex': trackIndex,
+            'tags': self.activeTrack.getTags()
         }
         serialized = json.dumps(playingTrack)
         fd.write(serialized)
+        fd.close()
+
+    def loadPlayingTrack(self) -> YtTrack:
+        '''Returns the last track that was playing when the player was last running.'''
+        try:
+            with open(self.currentTrackPath, 'r+') as fp:
+                savedTrack = json.load(fp)
+        except json.decoder.JSONDecodeError:
+            return None
+        except FileNotFoundError:
+            return None
+
+        playlistName = savedTrack['playlist']
+        if playlistName == None:
+            tags = savedTrack['tags']
+            track = YtTrack(tags['title'])
+            track._tags = tags
+            return track
+        playlist = self.getPlaylist(playlistName)
+        return playlist[savedTrack['trackIndex']]
 
     def getPlaylists(self) -> list:
         return self.playlists
@@ -183,28 +186,28 @@ class YtPlaylistManager(QtCore.QObject):
             track.playlist = playlist
         self.tracksAdded.emit(playlist, tracks)
         self.isDirty = True
-        if self.activeTrack != None and playlist == self.activeTrack.playlist:
-            self.saveCurrentTrack()
+        self.savePlayingTrack()
 
     def removeTracks(self, playlist: YtPlaylist, tracks: list):
         if playlist == None:
             return
-        saveTrack = self.activeTrack != None and playlist == self.activeTrack.playlist
+        saveTrack = (self.activeTrack != None and 
+                     playlist == self.activeTrack.playlist)
         for track in tracks:
             if self.activeTrack == track:
-                self.activeTrack = None
+                self.activeTrack.playlist = None
             track.playlist = None
             del(playlist[track])
         self.tracksRemoved.emit(playlist, tracks)
         self.isDirty = True
         if saveTrack:
-            self.saveCurrentTrack()
+            self.savePlayingTrack()
 
     def activateTrack(self, track: YtTrack):
         self.activeTrack = track
         self.trackActivated.emit(track)
         self.addTracks('# History', [track.makeCopy()])
-        self.saveCurrentTrack()
+        self.savePlayingTrack()
 
     def activateNextTrack(self, loopOther: bool = False):
         self.jumpPlaylistBy(1, loopOther)
@@ -221,12 +224,7 @@ class YtPlaylistManager(QtCore.QObject):
         if self.activeTrack.playlist == None:
             return None
         playlist = self.activeTrack.playlist
-
-        try:
-            trackIndex = playlist.tracks.index(self.activeTrack)
-        except ValueError:
-            # The track might have been removed from the playlist.
-            return None
+        trackIndex = playlist.index(self.activeTrack)
         
         if self.playMode == YtPlayMode.Shuffle:
             index = numpy.random.choice([

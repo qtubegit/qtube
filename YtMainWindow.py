@@ -64,7 +64,7 @@ class YtMainWindow(QtWidgets.QWidget):
         self.setupUi()
 
         # Restore the last track that was playing when player quit.
-        currentTrack = self.playlistManager.getCurrentTrack()
+        currentTrack = self.playlistManager.loadPlayingTrack()
         if currentTrack != None:
             self.playlistManager.activateTrack(currentTrack)
             self.trackView.showPlaylist(currentTrack.playlist)
@@ -249,6 +249,7 @@ class YtMainWindow(QtWidgets.QWidget):
     def closeEvent(self, event):
         self.updatePlaytime()
         self.playlistManager.savePlaylists()
+        self.playlistManager.savePlayingTrack()
         self.inputThread.quit()
         self.playlistWorker.quit()
 
@@ -317,7 +318,7 @@ class YtMainWindow(QtWidgets.QWidget):
         # received after requesting the player to start another track. In
         # order for position updates to not be written to the wrong track,
         # maintain the actually playing track separately. The track in the
-        # playlist manager is always the target state, so mismatches cannot
+        # playlist manager is always the target state and mismatches cannot
         # always be avoided.
         if self.playingTrack != None:
             self.playingTrack.position = position

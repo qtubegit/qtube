@@ -284,12 +284,11 @@ class YtMainWindow(QtWidgets.QWidget):
         self.player.seekVideo(position)
     
     def seekTrack(self, offset):
-        track = self.playlistManager.getActiveTrack()
-        if track == None or track.duration == None:
+        if self.playingTrack == None:
             return
-        track.position += offset
-        self.player.seekVideo(track.position)
-        
+        self.playingTrack.position += offset
+        self.player.seekVideo(self.playingTrack.position)
+
     def seekTrackPercent(self, percent):
         track = self.playlistManager.getActiveTrack()
         if track != None and track.duration != None:

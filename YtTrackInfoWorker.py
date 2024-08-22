@@ -19,6 +19,7 @@ class YtTrackInfoWorker(QtCore.QRunnable):
 
     def run(self):
         errors = None
+        results = None
         try:
             if self.track.videoId:
                 cmd = f'youtube-dl -j -- {shlex.quote(self.track.videoId)}'

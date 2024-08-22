@@ -29,8 +29,8 @@ class YtInputWorker(QtCore.QObject):
     # global shortcuts, as below.
     def captureKeys(self):
         with pynput.keyboard.GlobalHotKeys({
-            '<ctrl>+<shift>+o': self.showTrack,
-            '<ctrl>+<shift>+\\': self.playPause,
-            '<ctrl>+<shift>+]': self.playNext,
-            '<ctrl>+<shift>+[': self.playPrevious}) as thread:
+            '<ctrl>+<alt>+o': self.showTrack,
+            '<ctrl>+<alt>+\\': self.playPause,
+            '<ctrl>+<alt>+]': self.playNext,
+            '<ctrl>+<alt>+[': self.playPrevious}) as thread:
             thread.join()

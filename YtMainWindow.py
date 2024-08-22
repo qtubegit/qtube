@@ -19,6 +19,7 @@ from YtTrackInfoWorker import YtTrackInfoWorker
 from YtTrackView import YtTrackView
 from YtTrack import YtTrack
 from YtSearchWorkerLastFm import YtSearchWorkerLastFm
+from YtSearchWorkerSelenium import YtSearchWorkerSelenium
 from YtYouTubePlayer import YtYouTubePlayer, YtPlayerState
 
 class YtMainWindow(QtWidgets.QWidget):
@@ -78,9 +79,15 @@ class YtMainWindow(QtWidgets.QWidget):
 
         ## Widget Initialization
         self.player = YtYouTubePlayer()
+        self.volumeSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.volumeSlider.setMaximum(100)
+        self.volumeSlider.setFixedWidth(100)
         self.plNameEdit = QtWidgets.QLineEdit()
         self.trackView = YtTrackView(self.playlistManager)
         self.searchEdit = YtLineEdit()
+        searchFont = self.searchEdit.font()
+        searchFont.setPointSize(searchFont.pointSize() * 2)
+        self.searchEdit.setFont(searchFont)
         self.playlistView = YtPlaylistView(self.playlistManager)
         self.playlistView.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.albumArt = YtAspectRatioLabel(self.playlistView)
@@ -91,9 +98,6 @@ class YtMainWindow(QtWidgets.QWidget):
         self.previousButton = QtWidgets.QPushButton()
         self.previousButton.setIcon(self.previousIcon)
         self.progressBar = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.volumeSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.volumeSlider.setMaximum(100)
-        self.volumeSlider.setFixedWidth(100)
         self.playmodeButton = QtWidgets.QPushButton(YtPlayMode.Normal.value)
         self.playmodeButton.setFixedWidth(45)
         self.positionEdit = YtPositionLabel()
@@ -117,11 +121,11 @@ class YtMainWindow(QtWidgets.QWidget):
         self.playmodeButton.pressed.connect(self.playmodePressed)
         self.positionEdit.returnPressed.connect(self.positionEdited)
         self.player.playerStatusChanged.connect(self.playerStatusChanged)
-        self.player.volumeChanged.connect(self.volumeChanged)
         self.playlistManager.trackUpdated.connect(self.player.trackUpdated)
         self.playlistManager.trackActivated.connect(self.player.playTrack)
         self.player.positionChanged.connect(self.positionEdit.update)
         self.player.positionChanged.connect(self.positionChanged)
+        self.player.volumeChanged.connect(self.volumeChanged)
 
         ## Layout
         self.leftSide = QtWidgets.QWidget()
@@ -235,6 +239,8 @@ class YtMainWindow(QtWidgets.QWidget):
         self.shortcutFullscreen = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.FullScreen, self)
         self.shortcutFullscreen.activated.connect(self.toggleFullscreen)
 
+        self.player.start()
+
     def toggleFullscreen(self):
         if self.isFullScreen():
             self.showNormal()
@@ -252,6 +258,7 @@ class YtMainWindow(QtWidgets.QWidget):
         self.playlistManager.savePlayingTrack()
         self.inputThread.quit()
         self.playlistWorker.quit()
+        self.player.quit()
 
     def playmodePressed(self):
         modes = [YtPlayMode.Normal, YtPlayMode.Shuffle, YtPlayMode.Loop]
@@ -337,6 +344,7 @@ class YtMainWindow(QtWidgets.QWidget):
         term = self.searchEdit.text()
         ytPrefix = 'y:' # Search with youtube-dl.
         gApiPrefix = 'g:' # Search with Google API.
+        seleniumPrefix = 's:'
         if relatedTrack != None:
             if self.lastFmApiKey == None:
                 self.showMessage(
@@ -352,6 +360,8 @@ class YtMainWindow(QtWidgets.QWidget):
                     f'No Google keys configured. Add them to {self.googleKeysPath}.')
                 return
             self.searchWorker = YtSearchWorkerGoogle(self.googleKeys, term[len(gApiPrefix):])
+        elif term.startswith(seleniumPrefix):
+            self.searchWorker = YtSearchWorkerSelenium(term[len(seleniumPrefix):])
         else:
             if self.lastFmApiKey == None:
                 self.showMessage(

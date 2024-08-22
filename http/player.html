@@ -1,29 +1,24 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
-</head>
-
 <body>
     <div id="player"></div>
     <script>
         "use strict";
-        var qwebchannel;
-        new QWebChannel(qt.webChannelTransport, function (channel) {
-            qwebchannel = channel.objects.qwebchannel;
-        });
         function loadVideo(videoId) {
+            console.log("DEBUG: LOAD VIDEO");
             if (player.loadVideoById !== undefined) {
                 player.loadVideoById(videoId, 0, 'small');
             }
         }
         function playVideo() {
+            console.log("DEBUG: PLAY");
             if (player.playVideo !== undefined) {
                 player.playVideo();
             }
         }
         function cueVideo(videoId, startPosition) {
+            console.log("DEBUG: CUE");
             if (player.cueVideoById !== undefined) {
                 player.cueVideoById(videoId, startPosition);
             }
@@ -42,6 +37,14 @@
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         var player;
+        var ws = new WebSocket('ws://localhost:8765');
+
+        function sendEvent(event, data) {
+            if (ws.readyState == ws.OPEN) {
+                ws.send(`{"event": "${event}", "data": "${data}"}`);
+            }
+        }
+
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 events: {
@@ -56,16 +59,19 @@
             // volume to be right about the middle of the maximum.
             let initialVolume = 50;
             player.setVolume(initialVolume);
-            qwebchannel.playerVolumeChanged(initialVolume);
-
+            sendEvent('playerVolumeChanged', initialVolume);
+            
             setInterval(function () {
                 let position = player.getCurrentTime();
-                qwebchannel.playerProgressChanged(position);
+                if (position !== undefined) {
+                    sendEvent('playerProgressChanged', position);
+                }
             }, 1000);
-            qwebchannel.playerReady();
+            sendEvent('playerReady', '');
         }
         function onPlayerStateChange(event) {
-            qwebchannel.playerStateChanged(event.data);
+            console.log(`Player status change: ${event.data}.`);
+            sendEvent('playerStateChanged', event.data);
         }
     </script>
 </body>

@@ -1,11 +1,9 @@
 import ctypes
 import json
-import typing
 from PyQt6 import QtCore, QtGui, QtWidgets
 from YtPlaylistManager import YtPlaylistManager
 from YtPlaylist import YtPlaylist
 from YtPlaylistModel import YtPlaylistModel
-from YtTrack import YtTrack
 
 class YtPlaylistView(QtWidgets.QListView):
     playlistSelected = QtCore.pyqtSignal(YtPlaylist)

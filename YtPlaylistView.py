@@ -17,6 +17,7 @@ class YtPlaylistView(QtWidgets.QListView):
         self.selectedPlaylist = None
         self.playlistManager = plManager
         self.playlistManager.playlistCreated.connect(self.itemModel.refreshModel)
+        self.playlistManager.playlistCleared.connect(self.itemModel.refreshModel)
         self.playlistManager.trackActivated.connect(self.refreshView)
         self.playlistManager.tracksAdded.connect(self.refreshView)
         self.playlistManager.tracksRemoved.connect(self.refreshView)

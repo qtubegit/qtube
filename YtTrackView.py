@@ -147,7 +147,10 @@ class YtTrackView(QtWidgets.QTableView):
             actionMap[action]()
 
     def findSimilar(self):
-        track = self.selectedTracks()[0]
+        selectedTracks = self.selectedTracks()
+        if len(selectedTracks) == 0:
+            return
+        track = selectedTracks[0]
         self.findRelatedTracks.emit(track)
 
     def removeDuplicates(self):

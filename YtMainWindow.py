@@ -236,6 +236,8 @@ class YtMainWindow(QtWidgets.QWidget):
         self.shortcutRefreshTracks.activated.connect(self.trackView.refreshTracks)
         self.shortcutFindSimilar = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+k"), self)
         self.shortcutFindSimilar.activated.connect(self.trackView.findSimilar)
+        self.shortcutClearResults = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+j"), self)
+        self.shortcutClearResults.activated.connect(self.clearSearchResults)
         self.shortcutFullscreen = QtGui.QShortcut(QtGui.QKeySequence.StandardKey.FullScreen, self)
         self.shortcutFullscreen.activated.connect(self.toggleFullscreen)
 
@@ -329,6 +331,9 @@ class YtMainWindow(QtWidgets.QWidget):
         if self.playingTrack != None:
             self.playingTrack.position = position
 
+    def clearSearchResults(self):
+        self.playlistManager.clearPlaylist(self.searchResultsName)
+
     def findRelatedTracks(self, track: YtTrack):
         self.findTracks(track)
 
@@ -369,14 +374,11 @@ class YtMainWindow(QtWidgets.QWidget):
                 return
             self.searchWorker = YtSearchWorkerLastFm(term, self.lastFmApiKey)
 
-        # A gray font means that a search is running. I do not know for sure if
-        # this will look good on all system themes, e.g. light vs. dark mode.
         self.searchEdit.setStyleSheet('border: 1px solid yellow')
         self.searchWorker.tracksFound.connect(self.tracksFound)
         self.searchWorker.searchError.connect(self.showMessage)
         self.searchWorker.searchFinished.connect(self.searchFinished)
         self.threadPool.start(self.searchWorker)
-        self.playlistManager.clearPlaylist(self.searchResultsName)
     
     def searchFinished(self, thread):
         # Other threads might still be running, but we are only interested in the
